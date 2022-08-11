@@ -1,0 +1,73 @@
+#!/usr/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <filename>"
+    exit 1
+fi
+
+SCRIPT_DIR="$( cd "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )"
+
+# Take the first argument as the ID of the video output to be used
+VIDEO_OUTPUT_ID="$1"
+
+# Check if the ID was provided
+if [ -z "$VIDEO_OUTPUT_ID" ]; then
+    echo "ERROR: No video output ID provided"
+    exit 1
+fi
+
+# Check if the ID is a number
+if ! [[ "$VIDEO_OUTPUT_ID" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: Video output ID must be a number"
+  exit 1
+fi
+
+# Check if the video output exists
+if ! [[ -e "/dev/video$VIDEO_OUTPUT_ID" ]]; then
+  echo "ERROR: Video output ID $VIDEO_OUTPUT_ID does not exist"
+  exit 1
+fi
+
+# Check if we can write to the video output
+if ! [[ -w "/dev/video$VIDEO_OUTPUT_ID" ]]; then
+  echo "ERROR: Video output ID $VIDEO_OUTPUT_ID is not writable"
+  exit 1
+fi
+
+
+
+# Take the second argument as the ID of the video input to be used
+# If no argument is given, use input 0
+VIDEO_INPUT_ID="$2"
+if [ -z "$VIDEO_INPUT_ID" ]; then
+  VIDEO_INPUT_ID=0
+fi
+# Check if the ID is a number
+if ! [[ "$VIDEO_INPUT_ID" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: Video input ID must be a number"
+  exit 1
+fi
+
+echo "Using /dev/video$VIDEO_INPUT_ID as the input device"
+echo "Using /dev/video$VIDEO_OUTPUT_ID as the output device"
+echo "Use Ctrl-C to stop"
+
+ffmpeg -f v4l2 -framerate 60 -video_size 640x480 -i /dev/video$VIDEO_INPUT_ID -i $SCRIPT_DIR/assets/ifunnylogo.png -i $SCRIPT_DIR/assets/unregistered_hypercam.png -i $SCRIPT_DIR/assets/shutterstock.png -i $SCRIPT_DIR/assets/youtube.png -i $SCRIPT_DIR/assets/bandicam.png -filter_complex "\
+[0:v] scale=12000:480 [camera_stretched];\
+[camera_stretched] crop=120:320 [camera_cropped];\
+[camera_cropped][1:v] overlay=main_w-overlay_w:main_h-overlay_h [ifunny_logo];\
+[ifunny_logo] scale=720:480 [ifunny_logo_stretched];\
+[ifunny_logo_stretched][2:v] overlay=0:0 [unregistered_hypercam];\
+[unregistered_hypercam] scale=1920:1080 [scaled_hd];\
+[scaled_hd][3:v] overlay=0:0 [shutterstock];\
+[4:v] scale=500:254 [youtube];\
+[shutterstock][youtube] overlay=main_w-overlay_w:0 [youtube_overlayed];\
+[youtube_overlayed][5:v] overlay=main_w/2-overlay_w/2:0" -s 1920x1080 -r 60 -f v4l2 -vcodec rawvideo -pix_fmt yuyv422 /dev/video$VIDEO_OUTPUT_ID &> /dev/null
+
+# if ffmpeg exits with an error other than 255, then exit with the error code
+if [ $? -ne 255 ]; then
+    echo "ERROR: ffmpeg exited with error code $?"
+    exit $?
+fi
+
+exit 0
