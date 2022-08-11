@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 <filename>"
+    echo "Usage: $0 <input_device_id> [<output_device_id>]"
     exit 1
 fi
 
@@ -9,12 +9,6 @@ SCRIPT_DIR="$( cd "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )"
 
 # Take the first argument as the ID of the video output to be used
 VIDEO_OUTPUT_ID="$1"
-
-# Check if the ID was provided
-if [ -z "$VIDEO_OUTPUT_ID" ]; then
-    echo "ERROR: No video output ID provided"
-    exit 1
-fi
 
 # Check if the ID is a number
 if ! [[ "$VIDEO_OUTPUT_ID" =~ ^[0-9]+$ ]]; then
