@@ -13,9 +13,10 @@ There isn't any installation required.
 
 ## Usage
 
-funnycam will by default pull from video device 0, and will output to video device 10
+funnycam expects 1 argument: the ID to the output video device, but will take a second argument if you want to specify the target input device.
 
 ```bash
-$ ./funnycam
+# ./funnycam <output_device_number> [input_device_number]
+$ ./funnycam 10
 # random ffmpeg bullshit
 ```
