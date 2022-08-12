@@ -1,5 +1,7 @@
 # Funnycam
 
+![funnycam image](./funnycam.png)
+
 It's a funny camera :^)
 
 ## Prerequisites

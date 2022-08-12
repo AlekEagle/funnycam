@@ -46,17 +46,23 @@ echo "Using /dev/video$VIDEO_INPUT_ID as the input device"
 echo "Using /dev/video$VIDEO_OUTPUT_ID as the output device"
 echo "Use Ctrl-C to stop"
 
-ffmpeg -f v4l2 -framerate 60 -video_size 640x480 -i /dev/video$VIDEO_INPUT_ID -i $SCRIPT_DIR/assets/ifunnylogo.png -i $SCRIPT_DIR/assets/unregistered_hypercam.png -i $SCRIPT_DIR/assets/shutterstock.png -i $SCRIPT_DIR/assets/youtube.png -i $SCRIPT_DIR/assets/bandicam.png -filter_complex "\
-[0:v] scale=12000:480 [camera_stretched];\
+ffmpeg -f v4l2 -framerate 60 -video_size 640x480 -i /dev/video$VIDEO_INPUT_ID -i $SCRIPT_DIR/assets/ifunnylogo.png -i $SCRIPT_DIR/assets/unregistered_hypercam.png -i $SCRIPT_DIR/assets/shutterstock.png -i $SCRIPT_DIR/assets/youtube.png -i $SCRIPT_DIR/assets/bandicam.png -i $SCRIPT_DIR/assets/cutecut.png -i $SCRIPT_DIR/assets/Pornhub-logo.png -i $SCRIPT_DIR/assets/mouse.png -filter_complex "\
+[0:v] scale=1200:480 [camera_stretched];\
 [camera_stretched] crop=120:320 [camera_cropped];\
-[camera_cropped][1:v] overlay=main_w-overlay_w:main_h-overlay_h [ifunny_logo];\
-[ifunny_logo] scale=720:480 [ifunny_logo_stretched];\
-[ifunny_logo_stretched][2:v] overlay=0:0 [unregistered_hypercam];\
-[unregistered_hypercam] scale=1920:1080 [scaled_hd];\
-[scaled_hd][3:v] overlay=0:0 [shutterstock];\
+[camera_cropped] scale=1920:1080 [camera_rescaled];\
+[1:v] scale=1800:60 [ifunny_logo_scaled];\
+[camera_rescaled][ifunny_logo_scaled] overlay=main_w-overlay_w:main_h-overlay_h [ifunny_logo];\
+[2:v] scale=700:30 [unregistered_hypercam_scaled];\
+[ifunny_logo][unregistered_hypercam_scaled] overlay=0:0 [unregistered_hypercam];\
+[unregistered_hypercam][3:v] overlay=0:0 [shutterstock];\
 [4:v] scale=500:254 [youtube];\
 [shutterstock][youtube] overlay=main_w-overlay_w:0 [youtube_overlayed];\
-[youtube_overlayed][5:v] overlay=main_w/2-overlay_w/2:0" -s 1920x1080 -r 60 -f v4l2 -vcodec rawvideo -pix_fmt yuyv422 /dev/video$VIDEO_OUTPUT_ID &> /dev/null
+[youtube_overlayed][5:v] overlay=main_w/2-overlay_w/2:0 [bandicam];\
+[bandicam][6:v] overlay=0:main_h-overlay_h-60 [cutecut];\
+[7:v] scale=500:-1 [pornhub_scaled];\
+[cutecut][pornhub_scaled] overlay=main_w-overlay_w:main_h-overlay_h-60 [pornhub];\
+[8:v] scale=16:-1 [mouse_scaled];\
+[pornhub][mouse_scaled] overlay=1270:540" -s 1920x1080 -r 60 -f v4l2 -vcodec rawvideo -pix_fmt yuyv422 /dev/video$VIDEO_OUTPUT_ID &> /dev/null
 
 # if ffmpeg exits with an error other than 255, then exit with the error code
 if [ $? -ne 255 ]; then
